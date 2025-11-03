@@ -13,10 +13,11 @@ r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response o
 
 titles = r.html.find('h3')
 threadNum = 0 
-for title in titles:
-    threadURL = f"https://en.wikipedia.org/wiki/Wikipedia:Contents/{title.text}"
-    print(f"\nPage Title: {title.text}")
-    thread = session.get(threadURL)
+
+for i in range(0, 13):  # Browse by subject 
+    pageName = titles[i].text
+    print(f"\nPage Title: {pageName}")
+    thread = session.get(f"https://en.wikipedia.org/wiki/Wikipedia:Contents/{pageName}")
     threadOverview = thread.html.find("h2")
     if threadOverview: 
         print("Items on page:")
