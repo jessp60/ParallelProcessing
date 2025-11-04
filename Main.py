@@ -1,6 +1,6 @@
 # environment ~/Documents/GitHub/ParallelProcessing/.venv/bin/python
 from requests_html import HTML, HTMLSession 
-from thread import thread
+from thread import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
@@ -8,6 +8,7 @@ from tkinter import *
 
 session = HTMLSession()
 
+#scraper function
 def scrape_page(title):
     url = f"https://en.wikipedia.org/wiki/Wikipedia:Contents/{title}"
     try:
@@ -24,56 +25,86 @@ def scrape_page(title):
             return f"\nPage title: {title}\nNo items found on page."
     except Exception as e:
         return f"\nPage title: {title}\nError occurred: {e}"
+    
+def multithreading_scraper():
+    r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
+    titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
+
+    startTime = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=13) as executor:
+        futures = [executor.submit(scrape_page, title) for title in titles]
+        for future in as_completed(futures):
+            future.result()
+    endTime = time.perf_counter()
+    elapsed = round(endTime - startTime, 3)
+    print(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
+    return elapsed
 
 def main():
-    r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object 
-    titles = r.html.find('h3')
-    # threadNum = 0 
-    titles = [titles[i].text for i in range(0, 13)]
+    # r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object 
+    # titles = r.html.find('h3')
+    # # threadNum = 0 
+    # titles = [titles[i].text for i in range(0, 13)]
     
-    multiP = input("Please select the scraping method (Baseline, Forking, MultiThreading): ")
-    startTime = time.perf_counter() 
+    # multiP = input("Please select the scraping method (Baseline, Forking, MultiThreading): ")
+    # startTime = time.perf_counter() 
 
-    match multiP: 
-        case "Baseline": 
-            print("Baseline Threading")
-            for title in titles:
-                scrape_page(title)
-        case "MultiThreading": 
-            # Scrape page using threads 
-            with ThreadPoolExecutor(max_workers=13) as executor:
-                [executor.submit(scrape_page, title) for title in titles]
-        case "Forking": 
-        # Scrape page using forks
-            pass
-        case _: 
-            print("Not a valid choice!")
-    endTime = time.perf_counter() 
+    # match multiP: 
+    #     case "Baseline": 
+    #         print("Baseline Threading")
+    #         for title in titles:
+    #             scrape_page(title)
+    #     case "MultiThreading": 
+    #         # Scrape page using threads 
+    #         with ThreadPoolExecutor(max_workers=13) as executor:
+    #             [executor.submit(scrape_page, title) for title in titles]
+    #     case "Forking": 
+    #     # Scrape page using forks
+    #         pass
+    #     case _: 
+    #         print("Not a valid choice!")
+    # endTime = time.perf_counter() 
     
-    print(f"\nTotal {multiP} Processing Time: ", round(endTime-startTime, 3))
-
+    # print(f"\nTotal {multiP} Processing Time: ", round(endTime-startTime, 3))
+    pass
 if __name__ == "__main__":
     pass
 
+#GUI Code
 def run_scraper():
-    print("GUI is working")
+    method = opt.get()
+    clear_canvas
+    show_diagram(method)
+    if method == "MultiThreading":
+        threading.Thread(target=run_multithreading_scraper).start()
+    else: 
+        canvas.create_text(300, 180, text=f"{method} method not implemented yet.", font=("Arial", 12), fill="red")  
 
-# GUI
+def run_multithreading_scraper():
+    time.sleep(0.5)  #simulate delay for UI refresh
+    elapsed = multithreading_scraper()
+    show_result(elapsed)
+
+#GUI setup
 root = Tk()
 root.title("Parallel Processing") #window title
 root.config(bg="#572a3b")
-root.geometry("620x620")
-
-methods = ["Baseline", "MultiThreading", "Forking"] #different scraping methods
-opt = StringVar(root)
-opt.set(methods[0]) #default value
+root.geometry("700x700")
 
 titleLabel = Label(root, text="Parallel Processing Scraper", bg="#572a3b", fg="white", font=("Times New Roman", 22, "bold"))
 titleLabel.pack(pady=10)
 
-frame = Frame(root, width=620, height=620)
-frame.pack(padx=10, pady=10)
-frame.pack_propagate(False)
+descLabel = Label (root, text="program that compares different scraping methods (edit this later)", bg="#572a3b", fg="white", font=("Times New Roman", 14), justify="center")
+descLabel.pack(pady= 5)
+
+#main frame
+frame = Frame(root, bg="white", bd=2, relief="groove")
+frame.pack(fill = "both", expand=True, padx=20, pady=(5, 0))
+
+#dropdown menu
+methods = ["Baseline", "MultiThreading", "Forking"] #different scraping methods
+opt = StringVar(root)
+opt.set(methods[0]) #default value
 
 promptLabel = Label(frame, text="Select a scraping method:", font=("Times New Roman", 14))
 promptLabel.pack(pady=20)
@@ -83,6 +114,41 @@ OptionMenu(frame, opt, *methods).pack(pady=10)
 runScraper = Button(frame, text="Run Scraper", command=run_scraper)
 runScraper.pack(pady=20)
 
+#diagram drawings (using canvas)
+canvas = Canvas(frame, width = 600, height = 200, bg="white")
+canvas.pack(pady=10)
+
+def clear_canvas():
+    canvas.delete("all")
+
+def show_diagram(method):
+    clear_canvas()
+    if method == "Baseline":
+        pass
+    elif method == "MultiThreading":
+        canvas.create_text(300, 20, text="multi-threading diagram", font = ("Arial", 16, "bold"))
+        canvas.create_text(300, 40, text="multithreading def/description....", font=("Arial", 10))
+        
+        for i, color in enumerate(["#ccc6da", "#a790c1", "#7D6DA4","#463461", "#2c1a44"]):
+            x = 50 + i *100
+            canvas.create_rectangle(x, 60, x+80, 140, fill=color, outline="")
+            canvas.create_text(x+40, 150, text=f"Thread {i+1}", font=("Arial", 10))
+    elif method == "Forking":
+        pass
+
+def show_result(time_value):
+    canvas.create_text(300, 180, text=f"Total Time: {time_value} seconds", font=("Arial", 12), fill="green")
+
+
+#footer
+footerFrame = Frame(root, bg="#572a3b")
+footerFrame.pack(fill="x", side="bottom")
+footer = Label(footerFrame, 
+               text="CS4310 - Fall 2025 | Parallel Processing Project", 
+               bg = "#572a3b", fg="white", font=("Times New Roman", 14))
+footerNames = Label(footerFrame, text = "Arin Boyadjian, Jessica Pinto, Kaitlin Yen", bg="#572a3b", fg="white", font=("Times New Roman", 12))
+footer.pack(pady=5)
+footerNames.pack(pady=(0,5))
 
 #table to display results
 # lst = [['Method', 'Time (seconds)'],
