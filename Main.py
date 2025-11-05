@@ -1,6 +1,6 @@
 # environment ~/Documents/GitHub/ParallelProcessing/.venv/bin/python
 from requests_html import HTML, HTMLSession 
-from thread import threading
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
@@ -43,7 +43,7 @@ def multithreading_scraper():
     titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
 
     startTime = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=13) as executor:
+    with ThreadPoolExecutor(max_workers=13) as executor: 
         futures = [executor.submit(scrape_page, title) for title in titles]
         for future in as_completed(futures):
             future.result()
@@ -134,12 +134,13 @@ runScraper = Button(frame, text="Run Scraper", command=run_scraper)
 runScraper.pack(pady=20)
 
 #diagram drawings (using canvas)
-canvas = Canvas(frame, width = 600, height = 200, bg="white")
+canvas = Canvas(frame, width = 600, height = 260, bg="white")
 canvas.pack(pady=10)
 
 def clear_canvas():
     canvas.delete("all")
 
+# diagram display for each method
 def show_diagram(method):
     clear_canvas()
     if method == "Baseline":
@@ -154,13 +155,14 @@ def show_diagram(method):
         canvas.create_text(300, 20, text="multi-threading diagram", font = ("Arial", 16, "bold"))
         canvas.create_text(300, 40, text="multithreading def/description....", font=("Arial", 10))
         
-        for i, color in enumerate(["#ccc6da", "#a790c1", "#7D6DA4","#463461", "#2c1a44"]):
+        for i, color in enumerate(["#696969", "#696969", "#696969","#696969", "#696969"]):
             y = 60 + i *25
             canvas.create_rectangle(80, y, 520, y+20, fill=color, outline="")
             canvas.create_text(300, y+10, text=f"Thread {i+1}", font=("Arial", 10))
     elif method == "Forking":
         pass
 
+#display the result
 def show_result(time_value):
     canvas.create_text(300, 210, text=f"Total Time: {time_value} seconds", font=("Arial", 12), fill="green")
 
