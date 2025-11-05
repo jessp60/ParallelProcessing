@@ -26,6 +26,18 @@ def scrape_page(title):
     except Exception as e:
         return f"\nPage title: {title}\nError occurred: {e}"
     
+def baseline_scraper():
+    r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
+    titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
+
+    startTime = time.perf_counter()
+    for title in titles:
+        scrape_page(title)
+    endTime = time.perf_counter()
+    elapsed = round(endTime - startTime, 3)
+    print(f"\nTotal Baseline Processing Time: {elapsed} seconds")
+    return elapsed
+
 def multithreading_scraper():
     r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
     titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
@@ -73,12 +85,19 @@ if __name__ == "__main__":
 #GUI Code
 def run_scraper():
     method = opt.get()
-    clear_canvas
+    clear_canvas()
     show_diagram(method)
-    if method == "MultiThreading":
+    if method == "Baseline":
+        threading.Thread(target=run_baseline_scraper).start()
+    elif method == "MultiThreading":
         threading.Thread(target=run_multithreading_scraper).start()
     else: 
         canvas.create_text(300, 180, text=f"{method} method not implemented yet.", font=("Arial", 12), fill="red")  
+
+def run_baseline_scraper():
+    time.sleep(0.5)
+    elapsed = baseline_scraper()
+    show_result(elapsed)
 
 def run_multithreading_scraper():
     time.sleep(0.5)  #simulate delay for UI refresh
@@ -124,20 +143,26 @@ def clear_canvas():
 def show_diagram(method):
     clear_canvas()
     if method == "Baseline":
-        pass
+        canvas.create_text(300, 20, text="baseline diagram", font = ("Arial", 16, "bold"))
+        canvas.create_text(300, 40, text="baseline def/description....", font=("Arial", 10))
+        
+        for i, color in enumerate(["#a9a9a9", "#8b8b8b", "#696969","#484848", "#303030"]):
+            x = 50 + i *100
+            canvas.create_rectangle(x, 80, x+80, 120, fill=color, outline="")
+            canvas.create_text(x+40, 150, text=f"Thread {i+1}", font=("Arial", 10))
     elif method == "MultiThreading":
         canvas.create_text(300, 20, text="multi-threading diagram", font = ("Arial", 16, "bold"))
         canvas.create_text(300, 40, text="multithreading def/description....", font=("Arial", 10))
         
         for i, color in enumerate(["#ccc6da", "#a790c1", "#7D6DA4","#463461", "#2c1a44"]):
-            x = 50 + i *100
-            canvas.create_rectangle(x, 60, x+80, 140, fill=color, outline="")
-            canvas.create_text(x+40, 150, text=f"Thread {i+1}", font=("Arial", 10))
+            y = 60 + i *25
+            canvas.create_rectangle(80, y, 520, y+20, fill=color, outline="")
+            canvas.create_text(300, y+10, text=f"Thread {i+1}", font=("Arial", 10))
     elif method == "Forking":
         pass
 
 def show_result(time_value):
-    canvas.create_text(300, 180, text=f"Total Time: {time_value} seconds", font=("Arial", 12), fill="green")
+    canvas.create_text(300, 210, text=f"Total Time: {time_value} seconds", font=("Arial", 12), fill="green")
 
 
 #footer
@@ -151,7 +176,6 @@ footer.pack(pady=5)
 footerNames.pack(pady=(0,5))
 
 #table to display results
-# lst = [['Method', 'Time (seconds)'],
 #        ['Baseline', '0.123'],
 #        ['MultiThreading', '0.045'],
 #        ['Forking', '0.067']]
