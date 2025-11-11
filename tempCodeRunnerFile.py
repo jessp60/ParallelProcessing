@@ -16,27 +16,16 @@ def scrape_page(title):
         threadOverview = response.html.find("h2") #get all the <h2> elements
         if threadOverview:
             print(f"\nPage title: {title}")
-            result_text = f"\nPage title: {title}"
+            result = [f"\nPage title: {title}"]
             threadOverview = response.html.find("div.contentsPage__intro p", first = True)
             if threadOverview: 
-                result_text += f"\nDescription: {threadOverview.text}\n"
-            else:
-                result_text += "\nNo description found.\n"
+                print("Description:", threadOverview.text)
+            return "\n".join(result)
         else:
-            result_text = f"\nPage title: {title}\nNo items found on page."
+            return f"\nPage title: {title}\nNo items found on page."
     except Exception as e:
         return f"\nPage title: {title}\nError occurred: {e}"
     
-    # print in result box
-    print(result_text)
-    root.after(0, lambda:(
-        result_box.insert(END, result_text + "\n"),
-        result_box.see(END)
-    ))
-    
-    return result_text
-
-
 def baseline_scraper():
     r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
     titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
@@ -62,9 +51,6 @@ def multithreading_scraper():
     elapsed = round(endTime - startTime, 3)
     print(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
     return elapsed
-
-def forking_scraper():
-    pass
 
 def main():
     # r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object 
@@ -100,38 +86,26 @@ if __name__ == "__main__":
 def run_scraper():
     method = opt.get()
     clear_canvas()
-    result_box.delete(1.0, END)  #clear previous results
     show_diagram(method)
     if method == "Baseline":
         threading.Thread(target=run_baseline_scraper).start()
     elif method == "MultiThreading":
         threading.Thread(target=run_multithreading_scraper).start()
     else: 
-        canvas.create_text(300, 210, text=f"{method} method not implemented yet.", font=("Arial", 12), fill="red")  
+        canvas.create_text(300, 180, text=f"{method} method not implemented yet.", font=("Arial", 12), fill="red")  
 
 def run_baseline_scraper():
     time.sleep(0.5)
     elapsed = baseline_scraper()
     root.after(0, lambda: (
-        canvas.delete("status_text"), #remove processing text
+        canvas.itemconfig("status text", text = "done!"),
         show_result(elapsed)
     ))
 
 def run_multithreading_scraper():
     time.sleep(0.5)  #simulate delay for UI refresh
     elapsed = multithreading_scraper()
-    root.after(0, lambda: (
-        canvas.delete("status_text"), #remove processing text
-        show_result(elapsed)
-    ))
-
-def run_forking_scraper():
-    time.sleep(0.5)  #simulate delay for UI refresh
-    elapsed = forking_scraper()
-    root.after(0, lambda: (
-        canvas.delete("status_text"), #remove processing text
-        show_result(elapsed)
-    ))
+    show_result(elapsed)
 
 #GUI setup
 root = Tk()
@@ -177,13 +151,14 @@ def show_diagram(method):
         canvas.create_text(300, 40, text="baseline def/description....", font=("Arial", 10))
         
         # box
-        canvas.create_rectangle(200, 80, 400, 120, fill="#a3989c", outline="#290f19", width=2)
-        canvas.create_text(300, 100, text = "shared memory", font=("Arial", 12, "italic"))
+        canvas.create_rectangle(200, 80, 400, 120, fill="#a9a9a9", outline="#572a3b", width=2)
+        canvas.create_text(300, 100, text = "shared memory", font=("Arial", 10, "italic"))
 
         # single thread
-        points = [300, 130, 290, 140, 310, 150, 290, 160, 300, 170] #curved line
-        canvas.create_line(points, fill = "#572a3b", width=2, smooth=True)
-        canvas.create_text(300, 210, text="Processing...", font=("Arial", 12), tags="status_text") 
+        canvas.create_line(300, 120, 300, 160, fill = "#572a3b", arrow=LAST, width=3, smooth=True)
+        canvas.create_text(300, 180, text="Processing...", font=("Arial", 10), tags="status text")
+
+
 
         # for i, color in enumerate(["#a9a9a9", "#8b8b8b", "#696969","#484848", "#303030"]):
         #     x = 50 + i *100
@@ -193,60 +168,17 @@ def show_diagram(method):
         canvas.create_text(300, 20, text="multi-threading diagram", font = ("Arial", 16, "bold"))
         canvas.create_text(300, 40, text="multithreading def/description....", font=("Arial", 10))
         
-        canvas.create_rectangle(200, 80, 400, 120, fill="#a3989c", outline="#290f19", width=2)
-        canvas.create_text(300, 100, text = "shared memory", font=("Arial", 12, "italic"))
-
-        # multiple threads
-        thread_colors = ["#31121e", "#4d2132", "#623748", "#905f71", "#bf99a8"]
-        x_positions = [240, 270, 300, 330, 360]
-        
-        for i, x in enumerate(x_positions):
-            points = [x, 130, x-10, 140, x+10, 150, x-10, 160, x, 170] #curved line for each thread
-            canvas.create_line(points, fill = thread_colors[i % len(thread_colors)], width = 2, smooth = True)
-        canvas.create_text(300, 210, text="Processing...", font=("Arial", 12), tags="status_text")
-
-        # for i, color in enumerate(["#696969", "#696969", "#696969","#696969", "#696969"]):
-        #     y = 60 + i *25
-        #     canvas.create_rectangle(80, y, 520, y+20, fill=color, outline="")
-        #     canvas.create_text(300, y+10, text=f"Thread {i+1}", font=("Arial", 10))
+        for i, color in enumerate(["#696969", "#696969", "#696969","#696969", "#696969"]):
+            y = 60 + i *25
+            canvas.create_rectangle(80, y, 520, y+20, fill=color, outline="")
+            canvas.create_text(300, y+10, text=f"Thread {i+1}", font=("Arial", 10))
     elif method == "Forking":
-        canvas.create_text(300, 20, text="forking diagram", font = ("Arial", 16, "bold"))
-        canvas.create_text(300, 40, text="forking def/description....", font=("Arial", 10))
-
-        # forking diagram
-        start_x = 115
-        box_width = 100
-        gap = 40
-        process_colors = ["#4d2132", "#623748", "#905f71"]
-
-        for i in range(3):
-            x1 = start_x + i * (box_width + gap)
-            x2 = x1 + box_width
-            y1, y2 = 80, 120
-            canvas.create_rectangle(x1, y1, x2, y2, fill=process_colors[i%len(process_colors)], outline = "#290f19", width=2)
-            canvas.create_text((x1+x2)/2, 100, text = f"memory {i+1}", font=("Arial", 12, "italic"), fill="white")
-
-            # curved lines
-            points = [(x1+x2)/2, 130, (x1+x2)/2 - 10, 140, (x1+x2)/2 +10, 150, (x1+x2)/2 - 10, 160, (x1+x2)/2, 170]
-            canvas.create_line(points, fill="#4d2132", width=2, smooth=True)
-            canvas.create_text((x1+x2)/2, 190, text = f"Process {i+1}", font=("Arial", 12), tags="status_text")
+        pass
 
 #display the result
 def show_result(time_value):
-    canvas.create_text(300, 210, text=f"Total Time: {time_value} seconds", font=("Arial", 12), fill="#709958")
+    canvas.create_text(300, 210, text=f"Total Time: {time_value} seconds", font=("Arial", 12), fill="green")
 
-
-
-# result box
-result_frame = Frame(frame, bg="white", bd=2, relief="sunken")
-result_frame.pack(fill="both", expand=True, padx=20, pady=(0,10))
-
-scrollbar = Scrollbar(result_frame)
-scrollbar.pack(side="right", fill="y")
-
-result_box = Text(result_frame, height = 10, wrap="word", yscrollcommand=scrollbar.set, bg="#d2cfd0", fg="black", font=("Arial", 12))
-result_box.pack(fill="both", expand=True)
-scrollbar.config(command=result_box.yview)
 
 #footer
 footerFrame = Frame(root, bg="#572a3b")
@@ -257,5 +189,23 @@ footer = Label(footerFrame,
 footerNames = Label(footerFrame, text = "Arin Boyadjian, Jessica Pinto, Kaitlin Yen", bg="#572a3b", fg="white", font=("Times New Roman", 12))
 footer.pack(pady=5)
 footerNames.pack(pady=(0,5))
+
+#table to display results
+#        ['Baseline', '0.123'],
+#        ['MultiThreading', '0.045'],
+#        ['Forking', '0.067']]
+# total_rows = len(lst)
+# total_columns = len(lst[0])
+
+# table_frame = Frame(frame, bg="#572a3b")
+# table_frame.pack(pady=10)
+
+# class Table:
+#     def __init__(self, frame):
+#         for i in range(total_rows):
+#             for j in range(total_columns):
+#                 cell = Label(frame, text=lst[i][j], width=20, font=('Arial', 14), bg='#d3d3d3', fg='black', borderwidth=1, relief='solid')
+#                 cell.grid(row=i, column=j, padx=1, pady=1)
+# t = Table(table_frame)
 
 root.mainloop()
