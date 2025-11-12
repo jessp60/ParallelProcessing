@@ -31,6 +31,10 @@ try:
         # If text long shorten it
         short_text = (text[:1000] + "...") if len(text) > 200 else text
 
+        # If no text must be link or media
+        if text == "":
+            short_text = "[No text content]"
+
         print(f"{i}. {title}")
         print(f"   Author: {author}")
         print(f"   Upvotes: {upvotes}")
