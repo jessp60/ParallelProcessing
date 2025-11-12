@@ -7,7 +7,6 @@ json_url = f"https://www.reddit.com/r/{subreddit}/top.json?limit=10&t=all"
 
 # Reddit requires a User-Agent header, otherwise you may get blocked or empty results
 headers = {'User-Agent': 'Mozilla/5.0 (compatible; Python WebScraper 1.0)'}
-
 req = urllib.request.Request(json_url, headers=headers)
 
 try:
