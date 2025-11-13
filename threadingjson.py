@@ -1,7 +1,6 @@
-from multiprocessing import Process
+import threading
 import urllib.request
 import json
-import os
 import csv
 
 def child_fetch_top_posts(subreddit, limit=10):
@@ -10,7 +9,7 @@ def child_fetch_top_posts(subreddit, limit=10):
     req = urllib.request.Request(json_url, headers=headers)
 
     try:
-        print(f"\nTop {limit} posts from r/{subreddit} (PID {os.getpid()}):\n")
+        print(f"\nTop {limit} posts from r/{subreddit}:\n")
 
         # Read json data from Reddit into data
         with urllib.request.urlopen(req) as url:
@@ -19,7 +18,7 @@ def child_fetch_top_posts(subreddit, limit=10):
         posts = data['data']['children']
 
         # Create a CSV file for this subreddit
-        filename = f"forking_{subreddit}_top_posts.csv"
+        filename = f"threading_{subreddit}_top_posts.csv"
         with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["Index", "Title", "Author", "Upvotes", "Comments", "URL", "Post Text"])
@@ -42,7 +41,7 @@ def child_fetch_top_posts(subreddit, limit=10):
                     short_text = "[No text content]"
             
                 writer.writerow([i, title, author, upvotes, comments, link, short_text])
-                print(f"Process {os.getpid()} fetched post {i} from r/{subreddit}: {title}")
+                print(f"Thread fetched post {i} from r/{subreddit}: {title}")
         
     except urllib.error.URLError as e:
         print(f"Error accessing URL: {e.reason}")
@@ -55,18 +54,18 @@ def child_fetch_top_posts(subreddit, limit=10):
 
 if __name__ == "__main__":
     subreddits = ["webscraping", "learnpython", "datascience"]
-    processes = []
+    threads = []
 
-    # Spawn a process for each subreddit
+    # Spawn a thread for each subreddit
     for subreddit in subreddits:
-        p = Process(target=child_fetch_top_posts, args=(subreddit, 10))
-        p.start()
-        print(f"Spawned process {p.pid} for subreddit: {subreddit}")
-        processes.append(p)
+        t = threading.Thread(target=child_fetch_top_posts, args=(subreddit, 10))
+        t.start()
+        print(f"Created thread for subreddit: {subreddit}")
+        threads.append(t)
     
-    # Wait for all processes to complete
-    for p in processes:
-        p.join()
-        print(f"Process {p.pid} completed.")
+    # Wait for all threads to complete
+    for index, t in enumerate(threads):
+        t.join()
+        print(f"Thread {index} completed.")
     
     print("\n✅ All data retrieved. Program exiting cleanly.")
