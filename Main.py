@@ -1,5 +1,6 @@
 # environment ~/Documents/GitHub/ParallelProcessing/.venv/bin/python
 from requests_html import HTML, HTMLSession 
+from multiprocessing import Process
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
@@ -15,7 +16,7 @@ def scrape_page(title):
         response = session.get(url)
         threadOverview = response.html.find("h2") #get all the <h2> elements
         if threadOverview:
-            print(f"\nPage title: {title}")
+            #print(f"\nPage title: {title}")
             result_text = f"\nPage title: {title}"
             threadOverview = response.html.find("div.contentsPage__intro p", first = True)
             if threadOverview: 
@@ -28,14 +29,13 @@ def scrape_page(title):
         return f"\nPage title: {title}\nError occurred: {e}"
     
     # print in result box
-    print(result_text)
+    #print(result_text)
     root.after(0, lambda:(
         result_box.insert(END, result_text + "\n"),
         result_box.see(END)
     ))
     
     return result_text
-
 
 def baseline_scraper():
     r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
@@ -49,10 +49,9 @@ def baseline_scraper():
     print(f"\nTotal Baseline Processing Time: {elapsed} seconds")
     return elapsed
 
-def multithreading_scraper():
+def multithreading_scraper_1():
     r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
     titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
-
     startTime = time.perf_counter()
     with ThreadPoolExecutor(max_workers=13) as executor: 
         futures = [executor.submit(scrape_page, title) for title in titles]
@@ -63,38 +62,43 @@ def multithreading_scraper():
     print(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
     return elapsed
 
+def multithreading_scraper():
+    r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
+    titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
+    startTime = time.perf_counter()
+    threads = []
+    for title in titles:
+        t = threading.Thread(target=scrape_page, args=(title,))
+        t.start()
+        threads.append(t)
+
+    for index, t in enumerate(threads):
+        t.join()
+        print(f"Thread {index} completed.")
+
+    endTime = time.perf_counter()
+    elapsed = round(endTime - startTime, 3)
+    print(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
+    return elapsed
+
 def forking_scraper():
-    pass
+    r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
+    titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
+    startTime = time.perf_counter()
+    processes = []
+    for title in titles:
+        p = Process(target=scrape_page, args=(title,))
+        p.start()
+        processes.append(p)
 
-def main():
-    # r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object 
-    # titles = r.html.find('h3')
-    # # threadNum = 0 
-    # titles = [titles[i].text for i in range(0, 13)]
-    
-    # multiP = input("Please select the scraping method (Baseline, Forking, MultiThreading): ")
-    # startTime = time.perf_counter() 
+    for index, p in enumerate(processes):
+        p.join()
+        print(f"Process {index} completed.")
 
-    # match multiP: 
-    #     case "Baseline": 
-    #         print("Baseline Threading")
-    #         for title in titles:
-    #             scrape_page(title)
-    #     case "MultiThreading": 
-    #         # Scrape page using threads 
-    #         with ThreadPoolExecutor(max_workers=13) as executor:
-    #             [executor.submit(scrape_page, title) for title in titles]
-    #     case "Forking": 
-    #     # Scrape page using forks
-    #         pass
-    #     case _: 
-    #         print("Not a valid choice!")
-    # endTime = time.perf_counter() 
-    
-    # print(f"\nTotal {multiP} Processing Time: ", round(endTime-startTime, 3))
-    pass
-if __name__ == "__main__":
-    pass
+    endTime = time.perf_counter()
+    elapsed = round(endTime - startTime, 3)
+    print(f"\nTotal Forking Processing Time: {elapsed} seconds")
+    return elapsed
 
 #GUI Code
 def run_scraper():
@@ -106,8 +110,8 @@ def run_scraper():
         threading.Thread(target=run_baseline_scraper).start()
     elif method == "MultiThreading":
         threading.Thread(target=run_multithreading_scraper).start()
-    else: 
-        canvas.create_text(300, 210, text=f"{method} method not implemented yet.", font=("Arial", 12), fill="red")  
+    else:
+        threading.Thread(target=run_forking_scraper).start() 
 
 def run_baseline_scraper():
     time.sleep(0.5)
