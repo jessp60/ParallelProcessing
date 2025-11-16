@@ -59,6 +59,7 @@ if __name__ == "__main__":
     # Spawn a thread for each subreddit
     for subreddit in subreddits:
         t = threading.Thread(target=child_fetch_top_posts, args=(subreddit, 10))
+        # Begin executing threads in parallel
         t.start()
         print(f"Created thread for subreddit: {subreddit}")
         threads.append(t)
@@ -68,4 +69,4 @@ if __name__ == "__main__":
         t.join()
         print(f"Thread {index} completed.")
     
-    print("\n✅ All data retrieved. Program exiting cleanly.")
+    print("\nAll data retrieved. Program exiting cleanly.")

@@ -19,7 +19,7 @@ def child_fetch_top_posts(subreddit, limit=10):
         posts = data['data']['children']
 
         # Create a CSV file for this subreddit
-        filename = f"forking_{subreddit}_top_posts.csv"
+        filename = f"baseline_{subreddit}_top_posts.csv"
         with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["Index", "Title", "Author", "Upvotes", "Comments", "URL", "Post Text"])
@@ -60,14 +60,13 @@ if __name__ == "__main__":
     # Spawn a process for each subreddit
     for subreddit in subreddits:
         p = Process(target=child_fetch_top_posts, args=(subreddit, 10))
-        # Begins executing processes in parallel
-        p.start()
+        # No parallel processing, blocks rest of the code temporarily
+        p.run()
         print(f"Spawned process {p.pid} for subreddit: {subreddit}")
         processes.append(p)
     
-    # Wait for all processes to complete
+    # Display process completion
     for p in processes:
-        p.join()
         print(f"Process {p.pid} completed.")
     
-    print("\nAll data retrieved. Program exiting cleanly.")
+    print("\n All data retrieved. Program exiting cleanly.")
