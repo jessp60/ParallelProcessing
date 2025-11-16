@@ -3,6 +3,7 @@ import urllib.request
 import json
 import os
 import csv
+import time
 
 def child_fetch_top_posts(subreddit, limit=10):
     json_url = f"https://www.reddit.com/r/{subreddit}/top.json?limit={limit}&t=all"
@@ -57,6 +58,7 @@ if __name__ == "__main__":
     subreddits = ["webscraping", "learnpython", "datascience"]
     processes = []
 
+    startTime = time.perf_counter()
     # Spawn a process for each subreddit
     for subreddit in subreddits:
         p = Process(target=child_fetch_top_posts, args=(subreddit, 10))
@@ -68,5 +70,9 @@ if __name__ == "__main__":
     # Display process completion
     for p in processes:
         print(f"Process {p.pid} completed.")
+
+    endTime = time.perf_counter()
+    elapsed = round(endTime-startTime, 3)
+    print(f"\nTotal Baseline Processing Time: {elapsed} seconds")
     
     print("\n All data retrieved. Program exiting cleanly.")

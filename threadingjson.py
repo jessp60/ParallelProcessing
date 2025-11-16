@@ -2,6 +2,7 @@ import threading
 import urllib.request
 import json
 import csv
+import time
 
 def child_fetch_top_posts(subreddit, limit=10):
     json_url = f"https://www.reddit.com/r/{subreddit}/top.json?limit={limit}&t=all"
@@ -43,6 +44,7 @@ def child_fetch_top_posts(subreddit, limit=10):
                 writer.writerow([i, title, author, upvotes, comments, link, short_text])
                 print(f"Thread fetched post {i} from r/{subreddit}: {title}")
         
+        
     except urllib.error.URLError as e:
         print(f"Error accessing URL: {e.reason}")
     except json.JSONDecodeError as e:
@@ -56,6 +58,7 @@ if __name__ == "__main__":
     subreddits = ["webscraping", "learnpython", "datascience"]
     threads = []
 
+    startTime = time.perf_counter()
     # Spawn a thread for each subreddit
     for subreddit in subreddits:
         t = threading.Thread(target=child_fetch_top_posts, args=(subreddit, 10))
@@ -68,5 +71,9 @@ if __name__ == "__main__":
     for index, t in enumerate(threads):
         t.join()
         print(f"Thread {index} completed.")
+    endTime = time.perf_counter()
+    elapsed = round(endTime-startTime, 3)
+    print(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
+
     
     print("\nAll data retrieved. Program exiting cleanly.")
