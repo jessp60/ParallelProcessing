@@ -1,16 +1,18 @@
 # environment ~/Documents/GitHub/ParallelProcessing/.venv/bin/python
+
+import baselinejson, threadingjson, forkingjson
 from requests_html import HTML, HTMLSession 
 from multiprocessing import Process, Queue
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import time
+import time, io, sys
 
 from tkinter import *
 
 session = HTMLSession()
 
-#scraper function
-def scrape_page(title, queue=None):
+#wiki scraper function
+def wiki_scrape_page(title, queue=None):
     url = f"https://en.wikipedia.org/wiki/Wikipedia:Contents/{title}"
     try:
         response = session.get(url)
@@ -42,25 +44,25 @@ def scrape_page(title, queue=None):
     
     return result_text
 
-def baseline_scraper():
+def wiki_baseline_scraper():
     r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
     titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
 
     startTime = time.perf_counter()
     for title in titles:
-        scrape_page(title)
+        wiki_scrape_page(title)
     endTime = time.perf_counter()
     elapsed = round(endTime - startTime, 3)
     print(f"\nTotal Baseline Processing Time: {elapsed} seconds")
     return elapsed
 
-def multithreading_scraper():
+def wiki_multithreading_scraper():
     r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
     titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
     startTime = time.perf_counter()
     threads = []
     for title in titles:
-        t = threading.Thread(target=scrape_page, args=(title,))
+        t = threading.Thread(target=wiki_scrape_page, args=(title,))
         t.start()
         threads.append(t)
 
@@ -73,7 +75,7 @@ def multithreading_scraper():
     print(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
     return elapsed
 
-def forking_scraper():
+def wiki_forking_scraper():
     r = session.get('https://en.wikipedia.org/wiki/Wikipedia:Contents') # response object
     titles = [t.text for t in r.html.find('h3')[:13]] # get first 13 titles
 
@@ -82,7 +84,7 @@ def forking_scraper():
     startTime = time.perf_counter()
     processes = []
     for title in titles:
-        p = Process(target=scrape_page, args=(title,queue))
+        p = Process(target=wiki_scrape_page, args=(title,queue))
         p.start()
         processes.append(p)
 
@@ -100,44 +102,48 @@ def forking_scraper():
     print(f"\nTotal Forking Processing Time: {elapsed} seconds")
     return elapsed, results
 
-#GUI Code
 def run_scraper():
+    selected_website = website_opt.get()
+    method = opt.get()
+    clear_canvas
+    if selected_website == "Wikipedia":
+        run__wiki_scraper()
+    else:
+        run_reddit_scraper()
+
+#wiki scraper
+def run__wiki_scraper():
     method = opt.get()
     clear_canvas()
     result_box.delete(1.0, END)  #clear previous results
     show_diagram(method)
     if method == "Baseline":
-        threading.Thread(target=run_baseline_scraper).start()
+        threading.Thread(target=run_wiki_baseline_scraper).start()
     elif method == "MultiThreading":
-        threading.Thread(target=run_multithreading_scraper).start()
+        threading.Thread(target=run_wiki_multithreading_scraper).start()
     else:
-        threading.Thread(target=run_forking_scraper).start() 
+        threading.Thread(target=run_wiki_forking_scraper).start() 
 
-    selected_website = website_opt.get()
-    if selected_website == "Wikipedia":
-        pass
-    else:
-        pass
 
-def run_baseline_scraper():
+def run_wiki_baseline_scraper():
     time.sleep(0.5)
-    elapsed = baseline_scraper()
+    elapsed = wiki_baseline_scraper()
     root.after(0, lambda: (
         canvas.delete("status_text"), #remove processing text
         show_result(elapsed)
     ))
 
-def run_multithreading_scraper():
+def run_wiki_multithreading_scraper():
     time.sleep(0.5)  #simulate delay for UI refresh
-    elapsed = multithreading_scraper()
+    elapsed = wiki_multithreading_scraper()
     root.after(0, lambda: (
         canvas.delete("status_text"), #remove processing text
         show_result(elapsed)
     ))
 
-def run_forking_scraper():
+def run_wiki_forking_scraper():
     time.sleep(0.5)  #simulate delay for UI refresh
-    elapsed, results = forking_scraper()
+    elapsed, results = wiki_forking_scraper()
 
     def update_gui():
         result_box.delete(1.0, END)
@@ -147,6 +153,52 @@ def run_forking_scraper():
         canvas.delete("status_text"), #remove processing text
         show_result(elapsed)
     root.after(0, update_gui)
+
+#reddit scraper
+def run_reddit_scraper():
+    method = opt.get()
+    clear_canvas()
+    result_box.delete(1.0, END)
+    show_diagram(method)
+    if method == "Baseline":
+        threading.Thread(target=run_reddit_baseline_scraper).start()
+    elif method == "MultiThreading":
+        threading.Thread(target = run_reddit_multithreading_scraper).start()
+    else:
+        threading.Thread(target = run_reddit_forking_scraper).start()
+
+def run_reddit_baseline_scraper():
+    time.sleep(0.5)
+    elapsed, results = baselinejson.run_reddit_baseline()
+    root.after(0, lambda: (
+        update_results(results),
+        canvas.delete("status_text"), #remove processing text
+        show_result(elapsed)
+    ))
+
+def run_reddit_multithreading_scraper():
+    time.sleep(0.5)
+    elapsed, results = threadingjson.run_reddit_multithreading()
+    root.after(0, lambda: (
+        update_results(results),
+        canvas.delete("status_text"), #remove processing text
+        show_result(elapsed)
+    ))
+
+def run_reddit_forking_scraper():
+    time.sleep(0.5)
+    elapsed, results = forkingjson.run_reddit_forking()
+    root.after(0, lambda: (
+        update_results(results),
+        canvas.delete("status_text"), #remove processing text
+        show_result(elapsed)
+    ))
+
+def update_results(results):
+    result_box.delete(1.0, END)
+    for r in results:
+        result_box.insert(END, r + "\n")
+    result_box.see(END)
 
 if __name__ == "__main__":
 #GUI setup
@@ -165,6 +217,7 @@ if __name__ == "__main__":
     frame = Frame(root, bg="white", bd=2, relief="groove")
     frame.pack(fill = "both", expand=True, padx=20, pady=(5, 0))
 
+    # was trying out to see if we could divide wiki/reddit into 2 tabs
     # notebook = ttk.Notebook(frame)
     # notebook.pack(fill = "both", expand = True)
 
