@@ -6,7 +6,7 @@ import json
 import csv
 import time
 
-def child_fetch_top_posts(subreddit, results, limit=13):
+def child_fetch_top_posts(subreddit, results, limit=10):
     json_url = f"https://www.reddit.com/r/{subreddit}/top.json?limit={limit}&t=all"
     headers = {'User-Agent': 'Mozilla/5.0 (compatible; Python WebScraper 1.0)'}
     req = urllib.request.Request(json_url, headers=headers)
@@ -72,7 +72,7 @@ def child_fetch_top_posts(subreddit, results, limit=13):
 
 
 def run_reddit_multithreading():
-    subreddits = ["webscraping", "learnpython", "datascience"]
+    subreddits = ["webscraping", "learnpython", "datascience", "MachineLearning", "Python", "programming", "computerscience", "technology", "coding", "bigdata"]
     threads = []
     results = []
 
