@@ -71,8 +71,7 @@ def child_fetch_top_posts(subreddit, results, limit=13):
 
 
 
-def run_reddit_forking():
-    subreddits = ["webscraping", "learnpython", "datascience"]
+def run_reddit_forking(subreddits, limit):
     manager = Manager() # allows parallel execution of the code
     results = manager.list() 
     processes = []
@@ -80,7 +79,7 @@ def run_reddit_forking():
     startTime = time.perf_counter()
     # Spawn a process for each subreddit
     for subreddit in subreddits:
-        p = Process(target=child_fetch_top_posts, args=(subreddit, results, 13))
+        p = Process(target=child_fetch_top_posts, args=(subreddit, results, limit))
         # Begins executing processes in parallel
         p.start()
         results.append(f"Spawned process {p.pid} for subreddit: {subreddit}")
@@ -93,8 +92,7 @@ def run_reddit_forking():
     
     endTime = time.perf_counter()
     elapsed = round(endTime-startTime, 3)
-    # results.append(f"\nTotal Forking Processing Time: {elapsed} seconds")
+    results.append(f"\nTotal Forking Processing Time: {elapsed} seconds")
 
-    # print("\nAll data retrieved. Program exiting cleanly.")
-
-    return elapsed, list(results)
+    # return elapsed, list(results)
+    return elapsed

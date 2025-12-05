@@ -71,15 +71,14 @@ def child_fetch_top_posts(subreddit, results, limit=10):
 
 
 
-def run_reddit_multithreading():
-    subreddits = ["webscraping", "learnpython", "datascience", "MachineLearning", "Python", "programming", "computerscience", "technology", "coding", "bigdata"]
+def run_reddit_multithreading(subreddits, limit):
     threads = []
     results = []
 
     startTime = time.perf_counter()
     # Spawn a thread for each subreddit
     for subreddit in subreddits:
-        t = threading.Thread(target=child_fetch_top_posts, args=(subreddit, results, 13))
+        t = threading.Thread(target=child_fetch_top_posts, args=(subreddit, results, limit))
         # Begin executing threads in parallel
         t.start()
         # results.append(f"Created thread for subreddit: {subreddit}")
@@ -93,7 +92,5 @@ def run_reddit_multithreading():
     elapsed = round(endTime-startTime, 3)
     # results.append(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
 
-    
-    # print("\nAll data retrieved. Program exiting cleanly.")
-
-    return elapsed, results
+    # return elapsed, results
+    return elapsed

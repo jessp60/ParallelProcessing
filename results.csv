@@ -1,0 +1,4 @@
+Method,Average Time (seconds),Text Length,Pages per Test
+Baseline,8.64,1200,5
+MultiThreading,6.831,1200,5
+Forking,9.008,1200,5

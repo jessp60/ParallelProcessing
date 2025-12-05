@@ -1,12 +1,12 @@
 # environment ~/Documents/GitHub/ParallelProcessing/.venv/bin/python
 
 import csv
-import baselinejson, threadingjson, forkingjson
 from requests_html import HTML, HTMLSession 
 from multiprocessing import Process, Queue
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import time, io, sys
+import time
+import os
 
 def get_session():
     return HTMLSession()
@@ -34,7 +34,7 @@ def is_noise_paragraph(text):
         return True
     return False
 
-def get_wiki_intro(title, min_chars=120, max_accumulate=1200):
+def get_wiki_intro(title, max_accumulate, min_chars=120):
     """
     Return a robust introduction for a Wikipedia article title (string with underscores or spaces).
     It collects direct child <p> elements in div.mw-parser-output, skipping noise, and may
@@ -60,7 +60,7 @@ def get_wiki_intro(title, min_chars=120, max_accumulate=1200):
         accumulated += len(text)
 
         # stop if we've collected a decent-sized intro
-        if accumulated >= min_chars or accumulated >= max_accumulate:
+        if accumulated >= min_chars and accumulated >= max_accumulate:
             break
 
     # fallback: if nothing found in direct <p> children, attempt to find first <p> anywhere
@@ -77,10 +77,10 @@ def get_wiki_intro(title, min_chars=120, max_accumulate=1200):
 
 
 # Example usage inside your existing wiki_scrape_page:
-def wiki_scrape_page(title, queue=None):
+def wiki_scrape_page(title, max_accumulate, queue=None):
     url = f"https://en.wikipedia.org/wiki/{title}"
     try:
-        intro = get_wiki_intro(title)
+        intro = get_wiki_intro(title, max_accumulate)
         filename = f"wiki_{title}.csv"
         with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
@@ -126,12 +126,12 @@ def wiki_get_titles(limit):
 
 # baseline scraper function
 # define limit of pages to scrape
-def wiki_baseline_scraper(limit):
+def wiki_baseline_scraper(limit, max_accumulate):
     titles = wiki_get_titles(limit=limit)
 
     startTime = time.perf_counter()
     for title in list(titles):
-        wiki_scrape_page(title)
+        wiki_scrape_page(title, max_accumulate)
     endTime = time.perf_counter()
     elapsed = round(endTime - startTime, 3)
     print(f"\nTotal Baseline Processing Time: {elapsed} seconds")
@@ -139,13 +139,13 @@ def wiki_baseline_scraper(limit):
 
 # multithreading scraper function
 # define limit of pages to scrape
-def wiki_multithreading_scraper(limit):
+def wiki_multithreading_scraper(limit, max_accumulate):
     titles = wiki_get_titles(limit=limit)
 
     startTime = time.perf_counter()
     threads = []
     for title in titles:
-        t = threading.Thread(target=wiki_scrape_page, args=(title,))
+        t = threading.Thread(target=wiki_scrape_page, args=(title, max_accumulate))
         t.start()
         threads.append(t)
 
@@ -160,7 +160,7 @@ def wiki_multithreading_scraper(limit):
 
 # forking scraper function
 # define limit of pages to scrape
-def wiki_forking_scraper(limit):
+def wiki_forking_scraper(limit, max_accumulate):
     titles = wiki_get_titles(limit)
 
     queue = Queue()
@@ -169,7 +169,7 @@ def wiki_forking_scraper(limit):
     startTime = time.perf_counter()
 
     for title in titles:
-        p = Process(target=wiki_scrape_page, args=(title, queue))
+        p = Process(target=wiki_scrape_page, args=(title, max_accumulate, queue))
         p.start()
         processes.append(p)
 
@@ -191,17 +191,47 @@ def wiki_forking_scraper(limit):
 
 
 if __name__ == "__main__":
-    # baseline_times = 0
+    baseline_times = 0
     multithreading_times = 0
     forking_times = 0
 
+    # Get test parameters
     size = 30
-    limit = 5
+    print("Enter number of pages to scrape per test (e.g., 10, 20, 30):")
+    limit = int(input().strip())
+    print("Enter length of text to scrape per page in characters (e.g. 100, 200, 300):")
+    text_length = int(input().strip())
 
+    # Print test parameters
+    print(f"Number of Tests: {size}")
+    print(f"Number of Pages per Test: {limit}")
+    print(f"Length of Pages to Scrape: {text_length} pages")
+    print("\nStarting tests...")
+    print("-" * 70)
+
+    # Run tests
     for i in range(size):
-        # baseline_times += wiki_baseline_scraper(limit)
-        # multithreading_times += wiki_multithreading_scraper(limit)
-        forking_times += wiki_forking_scraper(limit)
-    # print(f"\nAverage Baseline Time: {round(baseline_times/size,3)} seconds")
-    # print(f"\nAverage Threading Time: {round(multithreading_times/size,3)} seconds")
-    print(f"\nAverage Forking Time: {round(forking_times/size,3)} seconds")
+        baseline_times += wiki_baseline_scraper(limit, text_length)
+        multithreading_times += wiki_multithreading_scraper(limit, text_length)
+        forking_times += wiki_forking_scraper(limit, text_length)
+    
+    avr_baseline = round(baseline_times / size, 3)
+    avr_multithreading = round(multithreading_times / size, 3)
+    avr_forking = round(forking_times / size, 3)
+    
+    print("-" * 70)
+    print("\nTest Results:")
+    print(f"\nAverage Baseline Time: {avr_baseline} seconds")
+    print(f"\nAverage Threading Time: {avr_multithreading} seconds")
+    print(f"\nAverage Forking Time: {avr_forking} seconds")
+
+    # Add to csv file
+    if not os.path.exists("results.csv"):
+        with open("results.csv", mode="w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Method", "Average Time (seconds)", "Text Length", "Pages per Test"])
+    with open("results.csv", mode="a", newline="", encoding="utf-8") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Baseline", avr_baseline, text_length, limit])
+        writer.writerow(["MultiThreading", avr_multithreading, text_length, limit])
+        writer.writerow(["Forking", avr_forking, text_length, limit])
