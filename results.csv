@@ -1,0 +1,23 @@
+Method,Average Time (seconds),Test Size,Pages per Test,Standard Deviation (seconds)
+Baseline,4.899,1200,10,1.409
+MultiThreading,3.793,1200,10,0.53
+Forking,7.711,1200,10,1.047
+Baseline,2.064,1200,5,0.354
+MultiThreading,1.993,1200,5,0.323
+Forking,3.075,1200,5,0.586
+Baseline,7.021,1200,15,1.055
+MultiThreading,7.002,1200,15,1.328
+Forking,7.561,1200,15,2.572
+Baseline,18.767,1200,20,4.665
+MultiThreading,18.125,1200,20,4.73
+Forking,21.89,1200,20,6.339
+Baseline,15.884,1200,25,5.474
+MultiThreading,16.982,1200,25,5.655
+Forking,26.15,1200,25,5.868
+Baseline,24.705,1200,30,6.743
+MultiThreading,23.809,1200,30,6.182
+Forking,34.408,1200,30,6.311
+Baseline,0.425,120,1,0.145
+MultiThreading,0.416,120,1,0.125
+Forking,4.606,120,1,1.0
+

@@ -1,0 +1,9 @@
+Method,Average Time (seconds),Test Size,Pages per Test
+Method,Average Time (seconds),Test Size,Pages per Test
+Baseline,5.143,30,10
+MultiThreading,3.637,30,10
+Forking,6.287,30,10
+Method,Average Time (seconds),Test Size,Pages per Test
+Baseline,1.699,30,5
+MultiThreading,1.244,30,5
+Forking,2.661,30,5

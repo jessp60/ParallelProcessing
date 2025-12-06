@@ -6,14 +6,14 @@ import json
 import csv
 import time
 
-def child_fetch_top_posts(subreddit, results, limit=13):
+def child_fetch_top_posts(subreddit, results, limit=10):
     json_url = f"https://www.reddit.com/r/{subreddit}/top.json?limit={limit}&t=all"
     headers = {'User-Agent': 'Mozilla/5.0 (compatible; Python WebScraper 1.0)'}
     req = urllib.request.Request(json_url, headers=headers)
 
     try:
         header = f"\nTop {limit} posts from r/{subreddit}:\n"
-        print(header)
+        # print(header)
         results.append(header)
 
         # Read json data from Reddit into data
@@ -71,15 +71,14 @@ def child_fetch_top_posts(subreddit, results, limit=13):
 
 
 
-def run_reddit_multithreading():
-    subreddits = ["webscraping", "learnpython", "datascience"]
+def run_reddit_multithreading(subreddits, limit):
     threads = []
     results = []
 
     startTime = time.perf_counter()
     # Spawn a thread for each subreddit
     for subreddit in subreddits:
-        t = threading.Thread(target=child_fetch_top_posts, args=(subreddit, results, 13))
+        t = threading.Thread(target=child_fetch_top_posts, args=(subreddit, results, limit))
         # Begin executing threads in parallel
         t.start()
         # results.append(f"Created thread for subreddit: {subreddit}")
@@ -93,7 +92,5 @@ def run_reddit_multithreading():
     elapsed = round(endTime-startTime, 3)
     # results.append(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
 
-    
-    # print("\nAll data retrieved. Program exiting cleanly.")
-
-    return elapsed, results
+    # return elapsed, results
+    return elapsed
