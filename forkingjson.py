@@ -14,7 +14,7 @@ def child_fetch_top_posts(subreddit, results, limit=13):
 
     try:
         header = f"\nTop {limit} posts from r/{subreddit} (PID {os.getpid()}):\n"
-        print (header)
+        # print (header)
         results.append(header)
 
         # Read json data from Reddit into data
@@ -88,7 +88,7 @@ def run_reddit_forking(subreddits, limit):
     # Wait for all processes to complete
     for p in processes:
         p.join()
-        print(f"Process {p.pid} completed.")
+        # print(f"Process {p.pid} completed.")
     
     endTime = time.perf_counter()
     elapsed = round(endTime-startTime, 3)

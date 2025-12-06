@@ -13,7 +13,7 @@ def child_fetch_top_posts(subreddit, results, limit=10):
 
     try:
         header = f"\nTop {limit} posts from r/{subreddit}:\n"
-        print(header)
+        # print(header)
         results.append(header)
 
         # Read json data from Reddit into data

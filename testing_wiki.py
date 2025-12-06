@@ -1,5 +1,7 @@
 # environment ~/Documents/GitHub/ParallelProcessing/.venv/bin/python
 
+import tkinter as tk
+from tkinter import messagebox
 import csv
 from requests_html import HTML, HTMLSession 
 from multiprocessing import Process, Queue
@@ -7,6 +9,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 import os
+import numpy as np
 
 def get_session():
     return HTMLSession()
@@ -191,9 +194,9 @@ def wiki_forking_scraper(limit, max_accumulate):
 
 
 if __name__ == "__main__":
-    baseline_times = 0
-    multithreading_times = 0
-    forking_times = 0
+    baseline_times = []
+    multithreading_times = []
+    forking_times = []
 
     # Get test parameters
     size = 30
@@ -211,13 +214,17 @@ if __name__ == "__main__":
 
     # Run tests
     for i in range(size):
-        baseline_times += wiki_baseline_scraper(limit, text_length)
-        multithreading_times += wiki_multithreading_scraper(limit, text_length)
-        forking_times += wiki_forking_scraper(limit, text_length)
+        baseline_times.append(wiki_baseline_scraper(limit, text_length))
+        multithreading_times.append(wiki_multithreading_scraper(limit, text_length))
+        forking_times.append(wiki_forking_scraper(limit, text_length))
     
-    avr_baseline = round(baseline_times / size, 3)
-    avr_multithreading = round(multithreading_times / size, 3)
-    avr_forking = round(forking_times / size, 3)
+    avr_baseline = np.round(np.mean(baseline_times), 3)
+    avr_multithreading = np.round(np.mean(multithreading_times), 3)
+    avr_forking = np.round(np.mean(forking_times), 3)
+
+    std_baseline = np.round(np.std(baseline_times), 3)
+    std_multithreading = np.round(np.std(multithreading_times), 3)
+    std_forking = np.round(np.std(forking_times), 3)
     
     print("-" * 70)
     print("\nTest Results:")
@@ -229,9 +236,9 @@ if __name__ == "__main__":
     if not os.path.exists("results.csv"):
         with open("results.csv", mode="w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["Method", "Average Time (seconds)", "Text Length", "Pages per Test"])
+            writer.writerow(["Method", "Average Time (seconds)", "Text Length", "Pages per Test", "Standard Deviation (seconds)"])
     with open("results.csv", mode="a", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["Baseline", avr_baseline, text_length, limit])
-        writer.writerow(["MultiThreading", avr_multithreading, text_length, limit])
-        writer.writerow(["Forking", avr_forking, text_length, limit])
+        writer.writerow(["Baseline", avr_baseline, text_length, limit, std_baseline])
+        writer.writerow(["MultiThreading", avr_multithreading, text_length, limit, std_multithreading])
+        writer.writerow(["Forking", avr_forking, text_length, limit, std_forking])
