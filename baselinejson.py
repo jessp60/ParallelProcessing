@@ -72,7 +72,7 @@ def child_fetch_top_posts(subreddit, results, limit=10):
 
 
 def run_reddit_baseline():
-    subreddits = ["webscraping", "learnpython", "datascience"]
+    subreddits = ["webscraping"]
     results = []
 
     startTime = time.perf_counter()

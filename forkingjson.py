@@ -75,6 +75,7 @@ def run_reddit_forking(subreddits, limit):
     manager = Manager() # allows parallel execution of the code
     results = manager.list() 
     processes = []
+    subreddits = ["webscraping"]
 
     startTime = time.perf_counter()
     # Spawn a process for each subreddit

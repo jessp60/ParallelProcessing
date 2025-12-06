@@ -74,6 +74,7 @@ def child_fetch_top_posts(subreddit, results, limit=10):
 def run_reddit_multithreading(subreddits, limit):
     threads = []
     results = []
+    subreddits = ["webscraping"]
 
     startTime = time.perf_counter()
     # Spawn a thread for each subreddit
