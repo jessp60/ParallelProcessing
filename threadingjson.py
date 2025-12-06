@@ -94,4 +94,4 @@ def run_reddit_multithreading(subreddits, limit):
     # results.append(f"\nTotal MultiThreading Processing Time: {elapsed} seconds")
 
     # return elapsed, results
-    return elapsed
+    return elapsed, results

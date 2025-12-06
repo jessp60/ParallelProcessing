@@ -96,4 +96,4 @@ def run_reddit_forking(subreddits, limit):
     results.append(f"\nTotal Forking Processing Time: {elapsed} seconds")
 
     # return elapsed, list(results)
-    return elapsed
+    return elapsed, results

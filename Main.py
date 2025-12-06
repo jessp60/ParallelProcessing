@@ -178,7 +178,7 @@ def run_reddit_baseline_scraper():
 
 def run_reddit_multithreading_scraper():
     time.sleep(0.5)
-    elapsed, results = threadingjson.run_reddit_multithreading()
+    elapsed, results = threadingjson.run_reddit_multithreading(["webscraping"], 13)
     root.after(0, lambda: (
         update_results(results),
         canvas.delete("status_text"), #remove processing text
@@ -187,7 +187,7 @@ def run_reddit_multithreading_scraper():
 
 def run_reddit_forking_scraper():
     time.sleep(0.5)
-    elapsed, results = forkingjson.run_reddit_forking()
+    elapsed, results = forkingjson.run_reddit_forking(["webscraping"], 13)
     root.after(0, lambda: (
         update_results(results),
         canvas.delete("status_text"), #remove processing text
